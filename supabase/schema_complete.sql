@@ -1102,3 +1102,25 @@ CREATE POLICY "clients_delete_staff" ON public.clients FOR DELETE
   TO authenticated
   USING (public.can_current_user_manage_clients());
 
+-- ============================================================================
+-- SOURCE: 20260814170000_0009_client_first_access.sql
+-- ============================================================================
+-- Link client records to Supabase Auth and require a password change on first access.
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS must_change_password boolean NOT NULL DEFAULT false;
+
+ALTER TABLE public.clients
+  ADD COLUMN IF NOT EXISTS auth_user_id uuid UNIQUE REFERENCES auth.users(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_clients_auth_user_id ON public.clients (auth_user_id);
+
+-- ============================================================================
+-- SOURCE: 20260814180000_0010_require_auth_for_booking.sql
+-- ============================================================================
+-- Booking links now require an authenticated client account.
+DROP POLICY IF EXISTS "services_select_public" ON public.services;
+DROP POLICY IF EXISTS "collaborators_select_public" ON public.collaborators;
+DROP POLICY IF EXISTS "booking_links_select_public" ON public.booking_links;
+DROP POLICY IF EXISTS "appointments_select_public" ON public.appointments;
+DROP POLICY IF EXISTS "appointments_insert_public" ON public.appointments;
+

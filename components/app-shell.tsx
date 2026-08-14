@@ -72,9 +72,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Link key={item.href} href={item.href}>
               <div
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group relative',
+                  'flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 group relative',
                   isActive
-                    ? 'bg-primary/15 text-primary gold-border'
+                    ? 'bg-primary/12 text-primary border border-primary/20 shadow-sm shadow-primary/5'
                     : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
                 )}
               >
@@ -115,7 +115,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-64 flex-col fixed inset-y-0 left-0 glass-strong border-r border-border/50 z-30">
+      <aside className="hidden lg:flex w-72 flex-col fixed inset-y-0 left-0 bg-card/70 backdrop-blur-2xl border-r border-border/60 z-30">
         <SidebarContent />
       </aside>
 
@@ -128,9 +128,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </Sheet>
 
       {/* Main Content */}
-      <div className="flex-1 lg:ml-64 flex flex-col min-h-screen">
+      <div className="flex-1 lg:ml-72 flex flex-col min-h-screen">
         {/* Header */}
-        <header className="sticky top-0 z-20 glass-strong border-b border-border/50 h-16 flex items-center px-4 lg:px-6 gap-4">
+        <header className="sticky top-0 z-20 bg-background/75 backdrop-blur-2xl border-b border-border/50 h-[4.5rem] flex items-center px-4 lg:px-8 gap-4">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="lg:hidden">
@@ -178,7 +178,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 lg:p-6 pb-20 lg:pb-6">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 xl:p-10 pb-24 lg:pb-10 app-content">
           {children}
         </main>
       </div>

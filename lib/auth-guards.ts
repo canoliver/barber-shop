@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import type { UserRole } from '@/lib/types';
 
-export function useRequireAuth() {
+export function useRequireAuth(loginPath = '/login') {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [authChecked, setAuthChecked] = useState(false);
@@ -13,12 +13,12 @@ export function useRequireAuth() {
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        router.replace('/login');
+        router.replace(loginPath);
       } else {
         setAuthChecked(true);
       }
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, loginPath]);
 
   return { user, loading: loading || !authChecked };
 }

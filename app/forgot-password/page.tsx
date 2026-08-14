@@ -9,8 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Scissors, Mail, Loader2, ArrowLeft, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { useSearchParams } from 'next/navigation';
 
 export default function ForgotPasswordPage() {
+  const searchParams = useSearchParams();
+  const returnPath = searchParams.get('from') === 'client' ? '/cliente/login' : '/login';
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -19,7 +22,7 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/login`,
+      redirectTo: `${window.location.origin}${returnPath}`,
     });
     setLoading(false);
     if (error) {
@@ -59,7 +62,7 @@ export default function ForgotPasswordPage() {
                   Enviamos um link de recuperação para <strong className="text-foreground">{email}</strong>.
                   Verifique sua caixa de entrada e spam.
                 </p>
-                <Link href="/login">
+                <Link href={returnPath}>
                   <Button variant="outline" className="w-full">
                     <ArrowLeft className="h-4 w-4 mr-2" /> Voltar para login
                   </Button>
@@ -85,7 +88,7 @@ export default function ForgotPasswordPage() {
                 <Button type="submit" className="w-full gold-gradient text-charcoal font-semibold hover:opacity-90" disabled={loading}>
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Enviar Link de Recuperação'}
                 </Button>
-                <Link href="/login" className="block text-center text-sm text-primary hover:underline">
+                <Link href={returnPath} className="block text-center text-sm text-primary hover:underline">
                   Voltar para login
                 </Link>
               </form>

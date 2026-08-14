@@ -10,8 +10,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
-        playfair: ['var(--font-playfair)', 'serif'],
+        sans: ['var(--font-manrope)', 'system-ui', 'sans-serif'],
+        playfair: ['var(--font-space-grotesk)', 'system-ui', 'sans-serif'],
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

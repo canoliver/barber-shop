@@ -81,13 +81,13 @@ export default function LoginPage() {
             <Scissors className="h-8 w-8 text-charcoal" />
           </div>
           <h1 className="font-playfair text-4xl font-bold gold-text">BarberPro</h1>
-          <p className="text-muted-foreground mt-2">Sistema de Gestão para Barbearias</p>
+          <p className="text-muted-foreground mt-2">Portal administrativo e da equipe</p>
         </div>
 
         <Card className="glass-strong border-border/50">
           <CardHeader>
-            <CardTitle className="font-playfair text-2xl">Entrar</CardTitle>
-            <CardDescription>Acesse sua conta para continuar</CardDescription>
+            <CardTitle className="font-playfair text-2xl">Acesso da equipe</CardTitle>
+            <CardDescription>Entre como administrador, barbeiro ou recepcionista</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -142,12 +142,15 @@ export default function LoginPage() {
                 {googleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2" />}
                 {googleLoading ? 'Conectando...' : 'Entrar com Google'}
               </Button>
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center justify-center text-sm">
                 <Link href="/forgot-password" className="text-primary hover:underline">
                   Esqueci minha senha
                 </Link>
-                <Link href="/register" className="text-primary hover:underline">
-                  Criar conta
+              </div>
+              <div className="pt-4 border-t border-border/50 text-center text-sm text-muted-foreground">
+                É cliente?{' '}
+                <Link href="/cliente/login" className="text-primary hover:underline">
+                  Acesse a Área do Cliente
                 </Link>
               </div>
             </form>

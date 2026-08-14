@@ -3,12 +3,21 @@
 import { useAuth } from '@/lib/auth-context';
 import { useRequireAuth } from '@/lib/auth-guards';
 import { Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function AcompanharLayout({ children }: { children: React.ReactNode }) {
-  const { loading } = useRequireAuth();
+  const { loading } = useRequireAuth('/cliente/login');
   const { user } = useAuth();
+  const router = useRouter();
 
-  if (loading || !user) {
+  useEffect(() => {
+    if (!loading && user?.must_change_password) {
+      router.replace('/cliente/primeiro-acesso');
+    }
+  }, [loading, user, router]);
+
+  if (loading || !user || user.must_change_password) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">

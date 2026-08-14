@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
+import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +18,8 @@ type Step = typeof STEP_LABELS[number];
 
 export default function BookingPage() {
   const params = useParams();
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const slug = params.slug as string;
 
   const [step, setStep] = useState<Step>('service');
@@ -31,12 +34,29 @@ export default function BookingPage() {
   const [clientName, setClientName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
   const [clientEmail, setClientEmail] = useState('');
+  const [clientId, setClientId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState<Appointment | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  useEffect(() => { loadData(); }, [slug]);
+  useEffect(() => {
+    if (authLoading) return;
+    const bookingPath = `/agendar/${slug}`;
+    if (!user) {
+      router.replace(`/cliente/login?next=${encodeURIComponent(bookingPath)}`);
+      return;
+    }
+    if (user.role !== 'client') {
+      router.replace('/app');
+      return;
+    }
+    if (user.must_change_password) {
+      router.replace(`/cliente/primeiro-acesso?next=${encodeURIComponent(bookingPath)}`);
+      return;
+    }
+    loadData();
+  }, [slug, user, authLoading, router]);
 
   const loadData = async () => {
     const { data: linkData } = await supabase
@@ -50,6 +70,37 @@ export default function BookingPage() {
     setCollaborator((linkData as any).collaborator as Collaborator);
     const { data: svcData } = await supabase.from('services').select('*').eq('is_active', true).order('name');
     setServices(svcData || []);
+
+    if (user) {
+      setClientName(user.full_name || '');
+      setClientPhone(user.phone || '');
+      setClientEmail(user.email || '');
+
+      let { data: registeredClient } = await supabase
+        .from('clients')
+        .select('id, full_name, phone, email')
+        .eq('auth_user_id', user.id)
+        .maybeSingle();
+
+      if (!registeredClient && user.email) {
+        const fallback = await supabase
+          .from('clients')
+          .select('id, full_name, phone, email')
+          .eq('email', user.email)
+          .maybeSingle();
+        registeredClient = fallback.data;
+        if (registeredClient) {
+          await supabase.from('clients').update({ auth_user_id: user.id }).eq('id', registeredClient.id);
+        }
+      }
+
+      if (registeredClient) {
+        setClientId(registeredClient.id);
+        setClientName(registeredClient.full_name || user.full_name || '');
+        setClientPhone(registeredClient.phone || user.phone || '');
+        setClientEmail(registeredClient.email || user.email || '');
+      }
+    }
     setLoading(false);
   };
 
@@ -57,6 +108,15 @@ export default function BookingPage() {
     if (selectedDate && collaborator) { loadSlots(); }
   }, [selectedDate, collaborator]);
 
+  useEffect(() => {
+    if (!confirmed) return;
+
+    const redirectTimer = window.setTimeout(() => {
+      router.replace('/acompanhar?tab=agendamentos');
+    }, 4000);
+
+    return () => window.clearTimeout(redirectTimer);
+  }, [confirmed, router]);
   const loadSlots = async () => {
     if (!collaborator) return;
     const dayOfWeek = String(new Date(selectedDate + 'T00:00:00').getDay());
@@ -133,7 +193,24 @@ export default function BookingPage() {
       const [h, m] = selectedTime.split(':').map(Number);
       const totalMin = h * 60 + m + selectedService.duration_minutes;
       const endTime = `${String(Math.floor(totalMin / 60) % 24).padStart(2, '0')}:${String(totalMin % 60).padStart(2, '0')}`;
+      let appointmentClientId = clientId;
+      if (!appointmentClientId && user) {
+        const { data: createdClient, error: clientError } = await supabase
+          .from('clients')
+          .insert({
+            auth_user_id: user.id,
+            full_name: clientName.trim(),
+            phone: clientPhone.trim(),
+            email: clientEmail.trim().toLowerCase() || user.email,
+          })
+          .select('id')
+          .single();
+        if (clientError) throw clientError;
+        appointmentClientId = createdClient.id;
+        setClientId(createdClient.id);
+      }
       const { data, error } = await supabase.from('appointments').insert({
+        client_id: appointmentClientId,
         collaborator_id: collaborator.id,
         service_id: selectedService.id,
         appointment_date: selectedDate,
@@ -153,7 +230,7 @@ export default function BookingPage() {
     setSubmitting(false);
   };
 
-  if (loading) {
+  if (authLoading || !user || user.role !== 'client' || user.must_change_password || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -193,6 +270,10 @@ export default function BookingPage() {
               <div className="flex justify-between"><span className="text-muted-foreground">Data:</span> <span className="font-medium">{new Date(selectedDate + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Horario:</span> <span className="font-medium">{selectedTime}</span></div>
             </div>
+            <Button onClick={() => router.replace('/acompanhar?tab=agendamentos')} className="w-full mt-6 gold-gradient text-charcoal font-semibold">
+              Ir para meus agendamentos
+            </Button>
+            <p className="text-xs text-muted-foreground mt-3">Você será redirecionado automaticamente para sua área.</p>
           </CardContent>
         </Card>
       </div>

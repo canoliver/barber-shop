@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
-import { useRequireAuth } from '@/lib/auth-guards';
 import { supabase } from '@/lib/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -43,13 +42,12 @@ function getCollaboratorName(c: AppointmentWithRelations['collaborator']): strin
 }
 
 export default function AcompanharPage() {
-  const { loading } = useRequireAuth();
   const { user, signOut } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('agendar');
+  const [activeTab, setActiveTab] = useState('agendamentos');
 
   // Booking state
   const [selectedCollaborator, setSelectedCollaborator] = useState<Collaborator | null>(null);
@@ -70,8 +68,18 @@ export default function AcompanharPage() {
       let { data: client, error } = await supabase
         .from('clients')
         .select('id, full_name, email, phone, loyalty_points')
-        .or(`email.eq.${user.email},phone.eq.${user.phone}`)
+        .eq('auth_user_id', user.id)
         .maybeSingle();
+
+      if (!client && !error) {
+        const fallback = await supabase
+          .from('clients')
+          .select('id, full_name, email, phone, loyalty_points')
+          .or(`email.eq.${user.email},phone.eq.${user.phone}`)
+          .maybeSingle();
+        client = fallback.data;
+        error = fallback.error;
+      }
 
       if (error) throw error;
       if (!client) {
@@ -297,7 +305,7 @@ export default function AcompanharPage() {
     setSubmitting(false);
   };
 
-  if (loading || clientLoading) {
+  if (clientLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -306,7 +314,7 @@ export default function AcompanharPage() {
   }
 
   if (!user) {
-    router.replace('/login');
+    router.replace('/cliente/login');
     return null;
   }
 
@@ -335,7 +343,7 @@ export default function AcompanharPage() {
               <p className="text-xs text-muted-foreground">Área do Cliente</p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={() => signOut()} className="text-muted-foreground hover:text-destructive">
+          <Button variant="ghost" size="icon" onClick={async () => { await signOut(); router.replace('/cliente/login'); }} className="text-muted-foreground hover:text-destructive">
             <LogOut className="h-5 w-5" />
           </Button>
         </div>

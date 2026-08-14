@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import type { Profile, UserRole } from '@/lib/types';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface AuthContextValue {
   user: Profile | null;
@@ -21,7 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadProfile = useCallback(async (userId: string) => {
+  const loadProfile = useCallback(async (userId: string, sessionUser?: SupabaseUser) => {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -33,15 +34,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null;
     }
 
-    if (data) return data as Profile;
+    const resolvedUser = sessionUser || (await supabase.auth.getUser()).data.user;
+    if (!resolvedUser) return null;
 
-    const { data: authUser } = await supabase.auth.getUser();
-    if (!authUser.user) return null;
-
-    const meta = authUser.user.user_metadata || {};
-    const fullName = meta.full_name || meta.name || meta.full_name || '';
+    const meta = resolvedUser.user_metadata || {};
+    const metadataName = String(meta.full_name || meta.name || meta.display_name || '').trim();
+    const emailName = (resolvedUser.email || '')
+      .split('@')[0]
+      .replace(/[._-]+/g, ' ')
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
+    const fullName = metadataName || emailName || 'Usuário';
     const avatarUrl = meta.avatar_url || meta.picture || '';
     const role = (meta.role as UserRole) || 'barber';
+
+    if (data) {
+      const profile = {
+        ...data,
+        full_name: data.full_name?.trim() || fullName,
+        email: resolvedUser.email || '',
+      } as Profile;
+
+      if (!data.full_name?.trim() && metadataName) {
+        await supabase.from('profiles').update({ full_name: metadataName }).eq('id', userId);
+      }
+
+      return profile;
+    }
 
     const { data: newProfile, error: insertError } = await supabase
       .from('profiles')
@@ -59,7 +77,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Erro ao criar perfil:', insertError);
       return null;
     }
-    return newProfile as Profile | null;
+    return newProfile
+      ? ({ ...newProfile, email: resolvedUser.email || '' } as Profile)
+      : null;
   }, []);
 
   useEffect(() => {
@@ -70,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!mounted) return;
 
       if (session?.user) {
-        const profile = await loadProfile(session.user.id);
+        const profile = await loadProfile(session.user.id, session.user);
         if (mounted) {
           setUser(profile);
           setLoading(false);
@@ -92,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return;
           }
           if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-            const profile = await loadProfile(session.user.id);
+            const profile = await loadProfile(session.user.id, session.user);
             if (mounted) setUser(profile);
             setLoading(false);
           }

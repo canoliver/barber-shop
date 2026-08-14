@@ -43,6 +43,7 @@ export function ClientForm({ open, onOpenChange, client, onSaved }: ClientFormPr
     e.preventDefault();
     if (!fullName.trim()) { toast.error('Nome é obrigatório.'); return; }
     if (!phone.trim()) { toast.error('Telefone é obrigatório.'); return; }
+    if (!client && !email.trim()) { toast.error('E-mail é obrigatório para criar o acesso do cliente.'); return; }
     setLoading(true);
     const payload = {
       full_name: fullName,
@@ -57,9 +58,20 @@ export function ClientForm({ open, onOpenChange, client, onSaved }: ClientFormPr
         if (error) throw error;
         toast.success('Cliente atualizado com sucesso!');
       } else {
-        const { error } = await supabase.from('clients').insert(payload);
-        if (error) throw error;
-        toast.success('Cliente cadastrado com sucesso!');
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error('Sessão expirada. Entre novamente.');
+
+        const response = await fetch('/api/clients', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Erro ao cadastrar cliente.');
+        toast.success('Cliente cadastrado! Senha inicial: 123456');
       }
       onSaved();
       onOpenChange(false);
@@ -87,8 +99,8 @@ export function ClientForm({ open, onOpenChange, client, onSaved }: ClientFormPr
               <Input id="phone" value={phone} onChange={(e) => setPhone(maskPhone(e.target.value))} placeholder="(11) 99999-9999" required className="bg-background/50" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@exemplo.com" className="bg-background/50" />
+              <Label htmlFor="email">E-mail {client ? "" : "*"}</Label>
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@exemplo.com" className="bg-background/50" required={!client} />
             </div>
           </div>
           <div className="space-y-2">
