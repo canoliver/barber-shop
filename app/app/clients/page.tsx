@@ -53,9 +53,17 @@ export default function ClientsPage() {
 
   const handleDelete = async () => {
     if (!deleteId) return;
-    const { error } = await supabase.from('clients').delete().eq('id', deleteId);
-    if (error) toast.error('Erro ao excluir cliente.');
-    else { toast.success('Cliente excluído!'); queryClient.invalidateQueries({ queryKey: ['clients'] }); }
+    const { data: deletedClient, error } = await supabase
+      .from('clients').delete().eq('id', deleteId).select('id').maybeSingle();
+
+    if (error) {
+      toast.error(`Erro ao excluir cliente: ${error.message}`);
+    } else if (!deletedClient) {
+      toast.error('Cliente não excluído. Verifique se seu usuário possui permissão.');
+    } else {
+      toast.success('Cliente excluído!');
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+    }
     setDeleteId(null);
   };
 
