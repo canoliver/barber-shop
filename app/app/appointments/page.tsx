@@ -366,9 +366,20 @@ function DayView({ appointments, isLoading, onEdit, onDelete, onNew, dateStr }: 
                               {formatTime(a.start_time)} • {a.service?.name || 'Serviço'} • {a.collaborator?.full_name || ''}
                             </p>
                           </div>
-                          <span className={`text-xs px-2 py-0.5 rounded-full border ${getAppointmentStatusColor(a.status)}`}>
-                            {getAppointmentStatusLabel(a.status)}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className={`text-xs px-2 py-0.5 rounded-full border ${getAppointmentStatusColor(a.status)}`}>
+                              {getAppointmentStatusLabel(a.status)}
+                            </span>
+                            <button
+                              type="button"
+                              aria-label="Excluir agendamento"
+                              title="Excluir agendamento"
+                              onClick={(event) => { event.stopPropagation(); onDelete(a.id); }}
+                              className="rounded-md p-1 text-muted-foreground hover:bg-destructive/15 hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}

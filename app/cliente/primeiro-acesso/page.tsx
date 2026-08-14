@@ -1,5 +1,7 @@
 'use client';
 
+import { BrandLogo, BrandName } from '@/components/brand';
+
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, Lock, Scissors } from 'lucide-react';
@@ -81,10 +83,8 @@ export default function FirstAccessPage() {
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-gold/10 rounded-full blur-3xl" />
       <div className="relative z-10 w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 rounded-2xl gold-gradient flex items-center justify-center gold-glow mb-4">
-            <Scissors className="h-8 w-8 text-charcoal" />
-          </div>
-          <h1 className="font-playfair text-4xl font-bold gold-text">BarberPro</h1>
+          <BrandLogo className="w-16 h-16 rounded-2xl mb-4" iconClassName="h-8 w-8" />
+          <h1 className="font-playfair text-4xl font-bold gold-text"><BrandName /></h1>
         </div>
         <Card className="glass-strong border-border/50">
           <CardHeader>

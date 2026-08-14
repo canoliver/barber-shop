@@ -1,5 +1,7 @@
 'use client';
 
+import { BrandLogo, BrandName } from '@/components/brand';
+
 import { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase/client';
@@ -335,11 +337,9 @@ export default function AcompanharPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl gold-gradient flex items-center justify-center gold-glow">
-              <Scissors className="h-6 w-6 text-charcoal" />
-            </div>
+            <BrandLogo className="w-12 h-12 rounded-xl" iconClassName="h-6 w-6" />
             <div>
-              <h1 className="font-playfair text-2xl font-bold gold-text">BarberPro</h1>
+              <h1 className="font-playfair text-2xl font-bold gold-text"><BrandName /></h1>
               <p className="text-xs text-muted-foreground">Área do Cliente</p>
             </div>
           </div>

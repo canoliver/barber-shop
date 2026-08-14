@@ -1,5 +1,7 @@
 'use client';
 
+import { BrandLogo, BrandName } from '@/components/brand';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
@@ -77,10 +79,8 @@ export default function LoginPage() {
 
       <div className="relative z-10 w-full max-w-md animate-fade-in">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 rounded-2xl gold-gradient flex items-center justify-center gold-glow mb-4">
-            <Scissors className="h-8 w-8 text-charcoal" />
-          </div>
-          <h1 className="font-playfair text-4xl font-bold gold-text">BarberPro</h1>
+          <BrandLogo className="w-28 h-28 rounded-3xl mb-5" iconClassName="h-12 w-12" />
+          <h1 className="font-playfair text-4xl font-bold gold-text"><BrandName /></h1>
           <p className="text-muted-foreground mt-2">Portal administrativo e da equipe</p>
         </div>
 

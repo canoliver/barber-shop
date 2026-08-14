@@ -15,6 +15,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { BrandLogo } from '@/components/brand';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
@@ -25,6 +26,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
 
   const navItems = user ? getNavItemsForRole(user.role) : [];
+
+  const { data: shopSettings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('shop_name')
+        .eq('id', 1)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
 
   const { data: unreadCount } = useQuery({
     queryKey: ['unread-notifications'],
@@ -55,11 +70,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-3 px-6 py-6 border-b border-border/50">
-        <div className="w-10 h-10 rounded-xl gold-gradient flex items-center justify-center gold-glow">
-          <Scissors className="h-5 w-5 text-charcoal" />
-        </div>
+        <BrandLogo className="w-10 h-10 rounded-xl" iconClassName="h-5 w-5" />
         <div>
-          <h1 className="font-playfair text-xl font-bold gold-text leading-none">BarberPro</h1>
+          <h1 className="font-playfair text-xl font-bold gold-text leading-none">{shopSettings?.shop_name || 'BarberPro'}</h1>
           <p className="text-xs text-muted-foreground mt-1">{user ? getRoleLabel(user.role) : ''}</p>
         </div>
       </div>

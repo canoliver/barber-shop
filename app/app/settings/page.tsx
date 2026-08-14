@@ -55,22 +55,40 @@ export default function SettingsPage() {
   const update = (key: keyof Settings, value: any) => setForm(prev => ({ ...prev, [key]: value }));
 
   const handleSave = async () => {
+    const shopName = form.shop_name?.trim();
+    if (!shopName) {
+      toast.error('Informe o nome da barbearia.');
+      return;
+    }
+
     setSaving(true);
-    const { error } = await supabase.from('settings').update(form).eq('id', 1);
-    if (error) toast.error('Erro ao salvar configurações.');
-    else { toast.success('Configurações salvas!'); queryClient.invalidateQueries({ queryKey: ['settings'] }); }
+    const { data, error } = await supabase
+      .from('settings')
+      .update({ ...form, shop_name: shopName })
+      .eq('id', 1)
+      .select('*')
+      .single();
+
+    if (error || !data) {
+      toast.error(error?.message || 'Não foi possível salvar as configurações.');
+    } else {
+      const savedSettings = data as Settings;
+      setForm(savedSettings);
+      queryClient.setQueryData(['settings'], savedSettings);
+      queryClient.invalidateQueries({ queryKey: ['public-brand'] });
+      toast.success('Configurações salvas e aplicadas!');
+    }
     setSaving(false);
   };
-
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const ext = file.name.split('.').pop();
-    const path = `logo.${ext}`;
+    const path = `logo-${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from('barbershop').upload(path, file, { upsert: true });
     if (error) { toast.error('Erro ao enviar logo.'); return; }
     const { data: { publicUrl } } = supabase.storage.from('barbershop').getPublicUrl(path);
-    update('logo_url', publicUrl);
+    update('logo_url', `${publicUrl}?v=${Date.now()}`);
     toast.success('Logo atualizado!');
   };
 

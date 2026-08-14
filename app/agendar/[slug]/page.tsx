@@ -1,5 +1,7 @@
 'use client';
 
+import { BrandLogo, BrandName } from '@/components/brand';
+
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
@@ -287,10 +289,8 @@ export default function BookingPage() {
 
       <div className="relative z-10 max-w-2xl mx-auto py-8">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 rounded-2xl gold-gradient flex items-center justify-center gold-glow mb-4">
-            <Scissors className="h-8 w-8 text-charcoal" />
-          </div>
-          <h1 className="font-playfair text-3xl font-bold gold-text">BarberLiber</h1>
+          <BrandLogo className="w-16 h-16 rounded-2xl mb-4" iconClassName="h-8 w-8" />
+          <h1 className="font-playfair text-3xl font-bold gold-text"><BrandName /></h1>
           <p className="text-muted-foreground mt-2">Agendamento com {collaborator.full_name}</p>
           {link.custom_message && <p className="text-sm text-muted-foreground mt-1 italic">&quot;{link.custom_message}&quot;</p>}
         </div>
