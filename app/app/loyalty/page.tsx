@@ -20,8 +20,11 @@ import { formatCurrency, getRewardTypeLabel } from '@/lib/format';
 import { Gift, Plus, Pencil, Trash2, Star, Award } from 'lucide-react';
 import { toast } from 'sonner';
 import type { LoyaltyReward, RewardType } from '@/lib/types';
+import { useAuth } from '@/lib/auth-context';
 
 export default function LoyaltyPage() {
+  const { user } = useAuth();
+  const canManage = user?.role === 'admin';
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<LoyaltyReward | null>(null);
@@ -56,7 +59,7 @@ export default function LoyaltyPage() {
   return (
     <div>
       <PageHeader title="Programa de Fidelidade" description="Configure recompensas e pontos para clientes fiéis.">
-        <Button onClick={() => { setEditing(null); setFormOpen(true); }} className="gold-gradient text-charcoal font-semibold"><Plus className="h-4 w-4 mr-2" /> Nova Recompensa</Button>
+        {canManage && <Button onClick={() => { setEditing(null); setFormOpen(true); }} className="gold-gradient text-charcoal font-semibold"><Plus className="h-4 w-4 mr-2" /> Nova Recompensa</Button>}
       </PageHeader>
 
       {/* Settings Card */}
@@ -75,7 +78,7 @@ export default function LoyaltyPage() {
 
       {/* Rewards Grid */}
       {isLoading ? <ListSkeleton count={3} /> : (rewards || []).length === 0 ? (
-        <EmptyState icon={<Gift className="h-8 w-8" />} title="Nenhuma recompensa criada" description="Crie recompensas para seus clientes resgatarem com pontos de fidelidade." actionLabel="Criar Recompensa" onAction={() => { setEditing(null); setFormOpen(true); }} />
+        <EmptyState icon={<Gift className="h-8 w-8" />} title="Nenhuma recompensa criada" description="Ainda n?o existem recompensas cadastradas." {...(canManage ? { actionLabel: 'Criar Recompensa', onAction: () => { setEditing(null); setFormOpen(true); } } : {})} />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           {(rewards || []).map((r: any) => (
@@ -92,10 +95,10 @@ export default function LoyaltyPage() {
                   <span className="text-lg font-bold text-amber-400">{r.points_required} pts</span>
                 </div>
                 <p className="text-sm text-muted-foreground mb-3">Valor: {formatCurrency(r.reward_value)}</p>
-                <div className="flex gap-2 pt-3 border-t border-border/50">
+                {canManage && <div className="flex gap-2 pt-3 border-t border-border/50">
                   <Button size="sm" variant="outline" onClick={() => { setEditing(r); setFormOpen(true); }} className="flex-1"><Pencil className="h-3.5 w-3.5 mr-1" /> Editar</Button>
                   <Button size="sm" variant="outline" onClick={() => setDeleteId(r.id)} className="text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
-                </div>
+                </div>}
               </CardContent>
             </Card>
           ))}

@@ -24,6 +24,7 @@ import type { Inventory, InventoryMovement, MovementType } from '@/lib/types';
 export default function InventoryPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const canManage = user?.role === 'admin';
   const [movementOpen, setMovementOpen] = useState(false);
   const [movementType, setMovementType] = useState<MovementType>('entry');
   const [selectedInventory, setSelectedInventory] = useState<Inventory | null>(null);
@@ -170,11 +171,11 @@ export default function InventoryPage() {
                                  : <Badge variant="secondary" className="bg-emerald-500/15 text-emerald-300 border-emerald-500/30">Normal</Badge>}
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-1 justify-end">
+                          {canManage && <div className="flex gap-1 justify-end">
                             <Button size="sm" variant="outline" onClick={() => openMovement(inv, 'entry')} className="h-8 text-emerald-400"><TrendingUp className="h-3.5 w-3.5 mr-1" />Entrada</Button>
                             <Button size="sm" variant="outline" onClick={() => openMovement(inv, 'exit')} className="h-8 text-red-400"><TrendingDown className="h-3.5 w-3.5 mr-1" />Saída</Button>
                             <Button size="sm" variant="outline" onClick={() => openMovement(inv, 'adjustment')} className="h-8"><Sliders className="h-3.5 w-3.5 mr-1" />Ajuste</Button>
-                          </div>
+                          </div>}
                         </TableCell>
                       </TableRow>
                     );

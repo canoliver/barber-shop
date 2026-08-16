@@ -18,10 +18,13 @@ import { formatCurrency } from '@/lib/format';
 import { Plus, Search, Pencil, Trash2, Package, LayoutGrid, List } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Product } from '@/lib/types';
+import { useAuth } from '@/lib/auth-context';
 
 const CATEGORIES = ['Pomada', 'Shampoo', 'Condicionador', 'Óleo para Barba', 'Cera', 'Pós-Barba', 'Acessórios', 'Outros'];
 
 export default function ProductsPage() {
+  const { user } = useAuth();
+  const canManage = user?.role === 'admin';
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -70,9 +73,9 @@ export default function ProductsPage() {
           <button onClick={() => setView('grid')} className={`px-3 py-1 rounded-md ${view === 'grid' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}><LayoutGrid className="h-4 w-4" /></button>
           <button onClick={() => setView('table')} className={`px-3 py-1 rounded-md ${view === 'table' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}><List className="h-4 w-4" /></button>
         </div>
-        <Button onClick={handleNew} className="gold-gradient text-charcoal font-semibold hover:opacity-90">
+        {canManage && <Button onClick={handleNew} className="gold-gradient text-charcoal font-semibold hover:opacity-90">
           <Plus className="h-4 w-4 mr-2" /> Novo Produto
-        </Button>
+        </Button>}
       </PageHeader>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -89,7 +92,7 @@ export default function ProductsPage() {
       {isLoading ? (
         <GridSkeleton count={6} />
       ) : filtered.length === 0 ? (
-        <EmptyState icon={<Package className="h-8 w-8" />} title="Nenhum produto cadastrado" description="Cadastre seu primeiro produto para começar a vender." actionLabel="Cadastrar Produto" onAction={handleNew} />
+        <EmptyState icon={<Package className="h-8 w-8" />} title="Nenhum produto cadastrado" description="Cadastre seu primeiro produto para começar a vender." {...(canManage ? { actionLabel: 'Cadastrar Produto', onAction: handleNew } : {})} />
       ) : view === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filtered.map((p: any) => {
@@ -119,13 +122,13 @@ export default function ProductsPage() {
                   </div>
                   <div className="flex items-center justify-between pt-3 border-t border-border/50">
                     <div className="flex items-center gap-2">
-                      <Switch checked={p.is_active} onCheckedChange={() => handleToggleActive(p)} />
+                      <Switch checked={p.is_active} onCheckedChange={() => handleToggleActive(p)} disabled={!canManage} />
                       <span className="text-xs text-muted-foreground">{p.is_active ? 'Ativo' : 'Inativo'}</span>
                     </div>
-                    <div className="flex gap-1">
+                    {canManage && <div className="flex gap-1">
                       <Button size="icon" variant="ghost" onClick={() => handleEdit(p)} className="h-8 w-8"><Pencil className="h-3.5 w-3.5" /></Button>
                       <Button size="icon" variant="ghost" onClick={() => setDeleteId(p.id)} className="h-8 w-8 text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
-                    </div>
+                    </div>}
                   </div>
                 </CardContent>
               </Card>
@@ -161,7 +164,7 @@ export default function ProductsPage() {
                       <td className="p-4 text-right">{formatCurrency(p.cost_price)}</td>
                       <td className="p-4 text-right font-medium">{formatCurrency(p.selling_price)}</td>
                       <td className="p-4 text-right"><span className={margin > 0 ? 'text-emerald-400' : 'text-red-400'}>{marginPct.toFixed(0)}%</span></td>
-                      <td className="p-4"><div className="flex gap-1 justify-end"><Button size="icon" variant="ghost" onClick={() => handleEdit(p)} className="h-8 w-8"><Pencil className="h-3.5 w-3.5" /></Button><Button size="icon" variant="ghost" onClick={() => setDeleteId(p.id)} className="h-8 w-8 text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button></div></td>
+                      <td className="p-4">{canManage && <div className="flex gap-1 justify-end"><Button size="icon" variant="ghost" onClick={() => handleEdit(p)} className="h-8 w-8"><Pencil className="h-3.5 w-3.5" /></Button><Button size="icon" variant="ghost" onClick={() => setDeleteId(p.id)} className="h-8 w-8 text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button></div>}</td>
                     </tr>
                   );
                 })}

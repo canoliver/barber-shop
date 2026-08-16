@@ -4,19 +4,30 @@ import { useAuth } from '@/lib/auth-context';
 import { useRequireAuth } from '@/lib/auth-guards';
 import { AppShell } from '@/components/app-shell';
 import { Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { loading } = useRequireAuth();
   const { user } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const receptionistPaths = [
+    '/app', '/app/appointments', '/app/clients', '/app/collaborators',
+    '/app/services', '/app/products', '/app/inventory', '/app/pos',
+    '/app/loyalty', '/app/booking-links', '/app/notifications', '/app/profile', '/app/search',
+  ];
 
   useEffect(() => {
     if (!loading && user?.role === 'client') {
       router.replace('/acompanhar');
+    } else if (!loading && user?.role === 'receptionist') {
+      const allowed = receptionistPaths.some((path) =>
+        path === '/app' ? pathname === path : pathname.startsWith(path)
+      );
+      if (!allowed) router.replace('/app');
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, pathname]);
 
   if (loading || !user || user.role === 'client') {
     return (

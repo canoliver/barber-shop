@@ -17,8 +17,10 @@ import { getInitials, formatCurrency, getWeekdayShort } from '@/lib/format';
 import { Plus, Search, Pencil, Trash2, UserCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Collaborator } from '@/lib/types';
+import { useAuth } from '@/lib/auth-context';
 
 export default function CollaboratorsPage() {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [formOpen, setFormOpen] = useState(false);
@@ -147,9 +149,11 @@ export default function CollaboratorsPage() {
                   <Button size="sm" variant="outline" onClick={() => handleEdit(c)} className="flex-1">
                     <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => setDeleteId(c.id)} className="text-destructive hover:text-destructive">
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  {user?.role === 'admin' && (
+                    <Button size="sm" variant="outline" onClick={() => setDeleteId(c.id)} className="text-destructive hover:text-destructive">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
