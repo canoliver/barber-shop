@@ -320,7 +320,13 @@ export default function POSPage() {
               filteredServices.map((s: any) => (
                 <button key={s.id} onClick={() => addToCart({ id: s.id, type: 'service', name: s.name, unitPrice: s.price, quantity: 1, serviceId: s.id })}
                   className="glass rounded-lg p-3 text-left hover:gold-glow transition-all border border-border/50">
-                  <div className="w-full h-20 rounded-lg bg-secondary/50 flex items-center justify-center mb-2"><Scissors className="h-6 w-6 text-muted-foreground" /></div>
+                  {s.image_url ? (
+                    <img src={s.image_url} alt={s.name} className="w-full h-20 rounded-lg object-cover mb-2" />
+                  ) : (
+                    <div className="w-full h-20 rounded-lg bg-secondary/50 flex items-center justify-center mb-2">
+                      <Scissors className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                  )}
                   <p className="text-sm font-medium truncate">{s.name}</p>
                   <p className="text-primary font-bold text-sm">{formatCurrency(s.price)}</p>
                   <p className="text-xs text-muted-foreground">{s.duration_minutes}min</p>
