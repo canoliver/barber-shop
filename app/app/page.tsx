@@ -24,7 +24,18 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const [chartRange, setChartRange] = useState<7 | 30>(7);
 
-  const today = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const toLocalDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const today = toLocalDate(now);
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfTomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
   const firstName = user?.full_name?.split(' ')[0] || 'Usuário';
 
   const { data: kpis, isLoading: kpisLoading } = useQuery({
@@ -32,11 +43,14 @@ export default function DashboardPage() {
     queryFn: async () => {
       const [todayAppts, todaySales, monthSales, newClients, lowStock] = await Promise.all([
         supabase.from('appointments').select('*', { count: 'exact', head: true }).eq('appointment_date', today).neq('status', 'cancelled'),
-        supabase.from('sales').select('total_amount').gte('created_at', `${today}T00:00:00`),
-        supabase.from('sales').select('total_amount').gte('created_at', `${today.slice(0, 8)}01T00:00:00`),
-        supabase.from('clients').select('*', { count: 'exact', head: true }).gte('created_at', `${today.slice(0, 8)}01T00:00:00`),
-        supabase.from('inventory').select('product_id, current_stock, minimum_stock').lt('current_stock', 'minimum_stock'),
+        supabase.from('sales').select('total_amount').gte('created_at', startOfToday.toISOString()).lt('created_at', startOfTomorrow.toISOString()),
+        supabase.from('sales').select('total_amount').gte('created_at', startOfMonth.toISOString()).lt('created_at', startOfNextMonth.toISOString()),
+        supabase.from('clients').select('*', { count: 'exact', head: true }).gte('created_at', startOfMonth.toISOString()).lt('created_at', startOfNextMonth.toISOString()),
+        supabase.from('inventory').select('product_id, current_stock, minimum_stock'),
       ]);
+
+      const failedQuery = [todayAppts, todaySales, monthSales, newClients, lowStock].find((result) => result.error);
+      if (failedQuery?.error) throw failedQuery.error;
 
       const todayRevenue = (todaySales.data || []).reduce((sum, s) => sum + Number(s.total_amount), 0);
       const monthRevenue = (monthSales.data || []).reduce((sum, s) => sum + Number(s.total_amount), 0);
@@ -46,7 +60,7 @@ export default function DashboardPage() {
         todayRevenue,
         monthRevenue,
         newClients: newClients.count || 0,
-        lowStock: (lowStock.data || []).length,
+        lowStock: (lowStock.data || []).filter((item) => Number(item.current_stock) < Number(item.minimum_stock)).length,
       };
     },
   });

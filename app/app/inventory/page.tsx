@@ -100,7 +100,7 @@ export default function InventoryPage() {
       });
 
     if (movErr) toast.error('Erro ao registrar movimentação.');
-    else { toast.success('Movimentação registrada!'); queryClient.invalidateQueries({ queryKey: ['inventory'] }); queryClient.invalidateQueries({ queryKey: ['inventory-movements'] }); queryClient.invalidateQueries({ queryKey: ['low-stock-count'] }); setMovementOpen(false); }
+    else { toast.success('Movimentação registrada!'); queryClient.invalidateQueries({ queryKey: ['inventory'] }); queryClient.invalidateQueries({ queryKey: ['inventory-movements'] }); queryClient.invalidateQueries({ queryKey: ['dashboard-kpis'] }); setMovementOpen(false); }
   };
 
   if (isError) return <ErrorState onRetry={refetch} />;
